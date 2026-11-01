@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinese Culinary History</title>
+<style>
+  html { scroll-behavior: smooth; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --paper: #e8d9b5; --paper-dark: #d9c49a; --ink: #3d2f1e; --accent: #8b4513; --gemini: #1a73e8; }
+  body { font-family: "Georgia", serif; background: var(--paper); color: var(--ink); overflow-x: hidden; min-height: 100vh; }
+  body.lang-zh { font-family: "Songti SC", "SimSun", serif; }
+  .lang-toggle { position: fixed; top: 20px; right: 20px; z-index: 100; padding: 8px 20px; background: var(--ink); color: var(--paper); border: none; border-radius: 20px; cursor: pointer; font-size: 0.95rem; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.2s; }
+  .lang-toggle:hover { opacity: 0.85; transform: scale(1.05); }
+  .bg-layer { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-layer .scroll-img { position: absolute; top: 0; left: 0; height: 100%; width: 200%; opacity: 0.08; background: repeating-linear-gradient(90deg, #6b5a3e 0px, #6b5a3e 2px, transparent 2px, transparent 40px); animation: scrollLeft 80s linear infinite; }
+  @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .page { position: relative; z-index: 1; min-height: 100vh; display: none; }
+  .page.active { display: block; }
+  #page-home { display: flex; flex-direction: column; align-items: center; padding: 40px 20px 80px; }
+  #page-home.active { display: flex; }
+  .site-title { font-size: 3rem; letter-spacing: 0.1em; margin-bottom: 8px; text-align: center; }
+  .site-subtitle { font-size: 1.1rem; letter-spacing: 0.1em; color: #6b5a3e; margin-bottom: 40px; font-style: italic; }
+  .carousel-wrap { width: 100%; max-width: 1100px; height: 320px; overflow: hidden; position: relative; margin-bottom: 40px; }
+  .carousel-track { display: flex; gap: 24px; position: absolute; left: 0; top: 50%; margin-top: -130px; animation: rotateCards 24s linear infinite; }
+  .carousel-wrap:hover .carousel-track { animation-play-state: paused; }
+  @keyframes rotateCards { from { left: 0; } to { left: -100%; } }
+  .food-card { flex: 0 0 260px; height: 260px; border-radius: 12px; cursor: pointer; position: relative; z-index: 10; overflow: hidden; box-shadow: 0 6px 20px rgba(61,47,30,0.25); transition: transform 0.3s ease; display: flex; align-items: flex-end; padding: 16px; }
+  .food-card:hover { transform: translateY(-8px) scale(1.03); }
+  .food-card .placeholder { position: absolute; inset: 0; }
+  .food-card .card-label { position: relative; z-index: 2; background: rgba(232,217,181,0.92); padding: 8px 12px; border-radius: 6px; line-height: 1.4; font-size: 0.95rem; font-weight: bold; }
+   .card-1 .placeholder { background-image: url('1.jpg'); background-size: cover; background-position: center; }
+  .card-2 .placeholder { background-image: url('2.jpg'); background-size: cover; background-position: center; }
+  .card-3 .placeholder { background-image: url('3.jpg'); background-size: cover; background-position: center; }
+  .card-4 .placeholder { background-image: url('4.jpg'); background-size: cover; background-position: center; }
+  .card-5 .placeholder { background-image: url('5.jpg'); background-size: cover; background-position: center; }
+  .search-trigger-area { width: 100%; max-width: 640px; text-align: center; }
+  .search-trigger { display: inline-block; padding: 14px 40px; background: var(--paper-dark); border: 2px solid var(--ink); border-radius: 30px; cursor: pointer; font-size: 1.1rem; transition: all 0.25s ease; }
+  .search-trigger:hover { background: var(--ink); color: var(--paper); }
+  #page-detail { padding: 24px 32px 60px; }
+  .detail-layout { display: flex; gap: 28px; align-items: flex-start; }
+  .detail-sidebar { flex: 0 0 auto; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 24px; }
+  .back-btn { padding: 10px 22px; background: var(--paper-dark); border: 2px solid var(--ink); border-radius: 24px; cursor: pointer; font-size: 1rem; transition: all 0.25s ease; font-family: inherit; }
+  .back-btn:hover { background: var(--ink); color: var(--paper); }
+  .mini-cover { width: 160px; height: 120px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 14px rgba(61,47,30,0.35); position: relative; border: 2px solid rgba(61,47,30,0.25); }
+  .mini-cover .placeholder { position: absolute; inset: 0; }
+  .detail-main { flex: 1; min-width: 0; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .detail-panel { background: rgba(255,255,255,0.72); border-radius: 12px; padding: 24px; height: 70vh; border: 1px solid rgba(61,47,30,0.2); overflow-y: auto; }
+  .detail-panel h3 { font-size: 1.3rem; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(61,47,30,0.25); }
+  .detail-panel .placeholder-text { color: #4a3b28; font-size: 1rem; line-height: 1.8; white-space: pre-wrap; }
+  #page-search { padding: 24px 32px 60px; }
+  .search-top-bar { margin-bottom: 20px; display: flex; }
+  .search-bar-mini { display: flex; gap: 10px; margin-bottom: 24px; }
+  .search-bar-mini input { flex: 1; padding: 12px 18px; border: 2px solid var(--ink); border-radius: 26px; background: rgba(255,255,255,0.85); font-family: inherit; font-size: 1.05rem; outline: none; }
+  .search-bar-mini button { padding: 12px 28px; border: 2px solid var(--ink); border-radius: 26px; background: var(--ink); color: var(--paper); cursor: pointer; font-family: inherit; font-size: 1.05rem; }
+  .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .search-panel { background: rgba(255,255,255,0.85); border-radius: 12px; padding: 24px; height: 70vh; border: 1px solid rgba(61,47,30,0.2); display: flex; flex-direction: column; }
+  .search-panel h3 { font-size: 1.25rem; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(61,47,30,0.25); flex-shrink: 0; }
+  .ai-output-wrapper { flex: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 8px; }
+  .ai-output { font-size: 1.05rem; line-height: 1.8; color: #4a3b28; white-space: pre-wrap; }
+  .ai-output .cursor { display: inline-block; width: 8px; height: 1em; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: text-bottom; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .ai-footer { flex-shrink: 0; padding-top: 16px; border-top: 1px dashed rgba(61,47,30,0.3); }
+  .ai-footer p { font-size: 0.9rem; color: #8a7a5e; margin-bottom: 10px; }
+  .btn-gemini { display: block; width: 100%; padding: 12px; background: var(--gemini); color: #fff; text-decoration: none; text-align: center; border-radius: 12px; font-size: 1rem; transition: all 0.2s; }
+  .btn-gemini:hover { opacity: 0.85; transform: translateY(-2px); }
+  .search-status-wrapper { flex: 1; overflow-y: auto; }
+  .search-status { font-size: 1.05rem; line-height: 1.8; color: #4a3b28; }
+  .search-status .kw-highlight { display: inline-block; background: var(--paper-dark); padding: 4px 12px; border-radius: 6px; margin: 6px 0; font-weight: bold; }
+  .search-status .tip { margin-top: 16px; color: #8a7a5e; font-size: 0.95rem; }
+  .btn-google { display: inline-block; margin-top: 16px; padding: 12px 24px; background: var(--accent); color: #fff; text-decoration: none; border-radius: 24px; cursor: pointer; font-size: 1rem; transition: all 0.2s; text-align: center; }
+  .btn-google:hover { opacity: 0.85; transform: translateY(-2px); }
+  .suggest-list { margin-top: 24px; padding-top: 16px; border-top: 1px dashed rgba(61,47,30,0.3); }
+  .suggest-list p { font-size: 0.95rem; color: #8a7a5e; margin-bottom: 8px; }
+  .suggest-chip { display: inline-block; margin: 4px 6px 4px 0; padding: 6px 14px; background: var(--paper-dark); border-radius: 16px; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
+  .suggest-chip:hover { background: var(--ink); color: var(--paper); }
+  @media (max-width: 720px) {
+    .detail-grid, .search-grid { grid-template-columns: 1fr; }
+    .site-title { font-size: 2.2rem; }
+    .detail-layout { flex-direction: column; }
+    .detail-sidebar { position: static; flex-direction: row; align-items: center; margin-bottom: 20px; }
+    .lang-toggle { top: 10px; right: 10px; padding: 6px 16px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body class="lang-en">
+
+<button class="lang-toggle" onclick="toggleLanguage()" id="langBtn">中文</button>
+<div class="bg-layer"><div class="scroll-img"></div></div>
+
+<section id="page-home" class="page active">
+  <h1 class="site-title" id="txt-title">Chinese Culinary History</h1>
+  <p class="site-subtitle" id="txt-subtitle">From AI to Historical Evidence</p>
+  <div class="carousel-wrap"><div class="carousel-track" id="carouselTrack"></div></div>
+  <div class="search-trigger-area"><div class="search-trigger" id="txt-searchBtn" onclick="goToSearchPage()">Search Dishes</div></div>
+</section>
+
+<section id="page-detail" class="page">
+  <div class="detail-layout">
+    <aside class="detail-sidebar">
+      <button class="back-btn" id="txt-back1" onclick="showPage('page-home')">Back to Home</button>
+      <div class="mini-cover" id="miniCover"><div class="placeholder"></div></div>
+      <div id="miniQuestion" style="font-size: 0.9rem; font-weight: bold; max-width: 160px; line-height: 1.4; color: var(--ink);"></div>
+    </aside>
+    <div class="detail-main">
+      <div class="detail-grid">
+        <div class="detail-panel"><h3 id="txt-aiTitle">AI Generated Content</h3><div class="placeholder-text" id="aiDetailText"></div></div>
+        <div class="detail-panel"><h3 id="txt-histTitle">Historical Evidence</h3><div class="placeholder-text" id="historyDetailText"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="page-search" class="page">
+  <div class="search-top-bar"><button class="back-btn" id="txt-back2" onclick="showPage('page-home')">Back to Home</button></div>
+  <div class="search-bar-mini">
+    <input type="text" id="searchInput" placeholder="Enter keywords..." maxlength="50" onkeydown="if(event.key==='Enter') doSearch()">
+    <button id="txt-searchBtn2" onclick="doSearch()">Search</button>
+  </div>
+  <div class="search-grid">
+    <div class="search-panel">
+      <h3 id="txt-aiPanel">AI Response</h3>
+      <div class="ai-output-wrapper"><div class="ai-output" id="aiOutput"><span class="cursor"></span></div></div>
+      <div class="ai-footer">
+        <p id="txt-doubt">Ask another AI:</p>
+        <a href="https://gemini.google.com/app" target="_blank" class="btn-gemini" id="txt-geminiBtn">Ask Gemini</a>
+      </div>
+    </div>
+    <div class="search-panel">
+      <h3 id="txt-realSearch">Real Search</h3>
+      <div class="search-status-wrapper">
+        <div class="search-status" id="searchStatus"><p id="txt-status1">Search above.</p><p class="tip" id="txt-status2">Options appear here.</p></div>
+      </div>
+      <div class="suggest-list"><p id="txt-suggest">Suggested:</p></div>
+    </div>
+  </div>
+</section>
+
+<script>
+let currentLang = 'en';
+
+const UI_TEXT = {
+  en: { title: "Chinese Culinary History", subtitle: "From AI to Historical Evidence", searchBtn: "Search Dishes", back: "Back", aiTitle: "AI Content", histTitle: "History", searchBtn2: "Search", aiPanel: "AI Response", doubt: "Ask AI:", geminiBtn: "Ask Gemini", realSearch: "Real Search", status1: "Search above.", status2: "Options here.", suggest: "Suggested:", placeholder: "Enter keywords...", resultKw: "Keywords:", resultTip: "Verify:", googleBtn: "Search Google", langBtn: "中文" },
+  zh: { title: "中国饮食史", subtitle: "从 AI 到史料", searchBtn: "搜索美食", back: "返回", aiTitle: "AI 内容", histTitle: "史料", searchBtn2: "搜索", aiPanel: "AI 回答", doubt: "换个 AI 问：", geminiBtn: "前往 Gemini", realSearch: "真实搜索", status1: "上方搜索。", status2: "选项在此。", suggest: "推荐：", placeholder: "输入关键词...", resultKw: "关键词：", resultTip: "验证：", googleBtn: "去 Google", langBtn: "English" }
+};
+
+const CARDS = [
+  { 
+    label: { en: "Did Su Dongpo really invent braised pork?", zh: "红烧肉（东坡肉）真的是苏东坡发明的吗？" }, 
+    cls: "card-1", 
+    aiText: { 
+      en: "Braised pork is universally acknowledged to have been invented by Su Dongpo. In the Yuanfeng era of the Northern Song, Su was exiled to Huangzhou... He wrote 'Ode to Pork' to record his insights. One could say that without Su Dongpo, there would be no braised pork in the sense we know today.", 
+      zh: "红烧肉公认是苏东坡发明的。北宋元丰年间，苏东坡被贬黄州，生活清苦，他便亲自琢磨烹肉之法，以慢火少水久炖，使猪肉酥烂入味，并写下《猪肉颂》记录心得。可以说，没有苏东坡，就没有今天意义上的红烧肉。" 
+    }, 
+    historyText: { 
+      en: "[What's wrong]\nThe recipe for braised pork is already fully recorded in the Northern Wei Qimin Yaoshu, far earlier than the Song. The name 'Dongpo pork' does not appear until the Ming Dynasty. Su Dongpo's own method was actually boiled pork.\n\n[Sources]\n1. Qimin Yaoshu · Zhenfou (Northern Wei)\n2. Su Shi, 'Ode to Pork'\n3. China News Service report (He Hong's research)", 
+      zh: "【哪里有问题】\n红烧肉做法在北魏《齐民要术》中已有完整记载，远早于宋代。“东坡肉”之名要到明代文献才出现。值得一提的是苏东坡当年的做法其实是白煮肉。\n\n【史料出处】\n1. 《齐民要术·蒸缶》（北魏，最早记录）\n2. 苏轼《猪肉颂》\n3. 中新网报道（何宏考证结论）" 
+    } 
+  },
+  { 
+    label: { en: "Did Tang people commonly use iron woks?", zh: "唐朝人已经普遍使用铁锅炒菜了吗？" }, 
+    cls: "card-2", 
+    aiText: { 
+      en: "Tang Dynasty people already commonly used iron woks for stir-frying. Tang metallurgy was highly developed and iron output rose sharply, so iron woks entered every household. One could say that the spread of iron woks was the key to the leap in Tang cooking standards.", 
+      zh: "唐朝人已经普遍使用铁锅炒菜。唐代冶铁业高度发达，铁产量大幅提升，铁锅随之走进千家万户。可以说，铁锅的普及是唐代烹饪水平跃升的关键，炒菜也正是从唐代开始成为中式烹饪的主流。" 
+    }, 
+    historyText: { 
+      en: "[What's wrong]\nIron woks only truly spread to ordinary households in the Song; Tang cooking still centered on boiling, roasting and steaming. The cited article from Science China Popularization cannot be found.\n\n[Sources]\n1. Beijing Youth Daily article on Song oil-pressing technology\n2. Archaeological Discussion of Ironware in the Sui-Tang Period", 
+      zh: "【哪里有问题】\n唐代冶铁确有进步，但“普遍使用”是夸大。铁锅真正普及到普通百姓家要到宋代。唐代烹饪仍以煮、烤、蒸为主。且AI承认检索不到其声称的科普中国文章。\n\n【史料出处】\n1. 北京青年报文章（指出炒菜流行于宋朝）\n2. 《隋唐时期铁器与铁器工业的考古学论述》（证明存在消费分层）" 
+    } 
+  },
+  { 
+    label: { en: "Is hubing the same as modern pizza?", zh: "胡饼就是现在的披萨吗？" }, 
+    cls: "card-3", 
+    aiText: { 
+      en: "Hubing is essentially the ancient pizza. In Tang Chang'an, hubing shops lined the streets, and the method was to cover the flatbread with mutton, pepper, butter and other toppings and bake it, almost identical to today's pizza.", 
+      zh: "胡饼其实就是古代的披萨。唐代长安胡饼店林立，做法是在面饼上铺满羊肉、胡椒、酥油等馅料烤制，与今天的披萨几乎一模一样。学界有一种说法认为，披萨的源头就是中国的胡饼。" 
+    }, 
+    historyText: { 
+      en: "[What's wrong]\nThe most typical form of hubing is a baked flatbread sprinkled with sesame, closer to naan. 'Pizza originated from hubing' has no reliable historical support.\n\n[Sources]\n1. Tang Yulin, 'Gulouzi' (shows it was a wealthy variant)\n2. Bowu magazine (states pizza is native to Italy)", 
+      zh: "【哪里有问题】\n胡饼最典型形态是撒芝麻的烤面饼，更接近馕或烧饼。“铺满馅料烤制”只是唐代一种富贵变体。披萨源自胡饼没有任何可靠史料支撑，属现代谣言。\n\n【史料出处】\n1. 《唐语林》“古楼子”（“豪家”特供，非胡饼常态）\n2. 《博物》杂志（比萨为意大利本土食物）" 
+    } 
+  },
+  { 
+    label: { en: "Roast duck in Along the River?", zh: "《清明上河图》里画了烤鸭吗？" }, 
+    cls: "card-4", 
+    aiText: { 
+      en: "The painting vividly records the food scene of Song Bianjing. It is full of taverns and eateries, with roast duck stalls, showing that Song people already ate roast duck. This painting is an encyclopedia of Song food culture.", 
+      zh: "《清明上河图》生动记录了宋代汴京的饮食盛况。画中酒楼林立、食肆遍布，烤鸭摊、面食铺一应俱全，说明宋代人已经开始吃烤鸭。可以说，这幅画就是一部宋代饮食文化的百科全书。" 
+    }, 
+    historyText: { 
+      en: "[What's wrong]\nMost eateries in the painting are simple, similar to today's food stalls, selling fast food like minced-meat soup and fried duck. There were no 'roast duck stalls'. AI conflated the food stalls with high-end taverns.\n\n[Sources]\n1. People's Daily Online research article (details the simple stalls and dishes like 'fried duck')\n2. The original painting.", 
+      zh: "【哪里有问题】\n画中食店多设施简陋，类似大排档，卖撺肉羹、煎鸭子等家常快餐，没有“烤鸭摊”。AI把“大排档”和“高档正店”混在一起，还把“煎鸭子”说成“烤鸭”。\n\n【史料出处】\n1. 人民网转载考据文章（指明是简陋大排档及“煎鸭子”等菜式）\n2. 原画（故宫博物院数字文物库）" 
+    } 
+  },
+  { 
+    label: { en: "Did the 'Eight Big Bowls' originate in the Ming court?", zh: "八大碗起源于明朝宫廷吗？" }, 
+    cls: "card-5", 
+    aiText: { 
+      en: "The Eight Big Bowls originated in the Ming court. They were the banquet format established when Ming emperors feasted their ministers, symbolizing 'eight directions paying tribute'. Later this court banquet form spread to the people.", 
+      zh: "八大碗起源于明朝宫廷，是明代皇帝宴请群臣时定下的宴席规制。后来这一宫廷宴席形式流入民间，被各地婚丧嫁娶所沿用，承载着明代宫廷礼仪文化向民间下沉的历史脉络。" 
+    }, 
+    historyText: { 
+      en: "[What's wrong]\nThe Eight Big Bowls are essentially a general term for folk 'flowing banquets'. Because tables and bowls were insufficient, people adopted a 'come and eat, finish and go' approach. It has no direct lineage with the Ming court.\n\n[Sources]\n1. No primary-source support for the Ming court claim.\n2. China News Service reprint of Beijing Morning Post (derived from Beijing Local Gazetteer).", 
+      zh: "【哪里有问题】\n八大碗本质是民间流水席的统称。因桌椅碗筷不够而“随来随吃、吃完即走”。它和“明朝宫廷”没有直接源流关系。\n\n【史料出处】\n1. “起源于明朝宫廷”没有一手文献支撑。\n2. 中新网转载《北京晨报》（引《北京地方志·人民生活志》）" 
+    } 
+  }
+];
+const SYNONYMS_MAP = {
+  "辣椒": ["chili", "chili pepper", "cayenne", "hot pepper", "辣椒", "番椒", "辣子", "美洲", "明朝"],
+  "番茄": ["tomato", "tomatoes", "番茄", "西红柿", "晚清"],
+  "玉米": ["corn", "maize", "玉米", "玉蜀黍", "番麦"],
+  "番薯": ["sweet potato", "sweet potatoes", "番薯", "红薯", "甘薯", "地瓜", "陈振龙", "万历"],
+  "土豆": ["potato", "potatoes", "土豆", "马铃薯", "洋芋"],
+  "先秦饮食": ["pre-qin", "先秦", "主食", "小米", "蔬菜", "蒸煮"],
+  "唐代饮食": ["tang dynasty", "tang", "唐朝", "唐代", "胡食", "西域", "合食", "烧尾宴"],
+  "宋代小吃": ["song dynasty", "song", "宋朝", "宋代", "汴京", "小吃", "饮子", "汤饼"],
+  "明代饮食": ["ming dynasty", "明朝", "淮扬", "节俭"],
+  "满汉全席": ["qing dynasty", "清朝", "满汉全席", "国宴", "满菜", "汉菜", "满汉全席程序"],
+  "炒菜": ["stir-fry", "stir frying", "炒", "炒菜", "铁锅", "油", "唐宋"],
+  "蒸": ["steaming", "steam", "蒸", "甑", "殷墟", "蒸笼", "陶器"],
+  "酱": ["sauce", "酱", "醢", "肉酱", "周朝", "发酵"],
+  "腌菜": ["pickled vegetables", "腌菜", "菹", "周礼", "盐"],
+  "食物保存": ["preservation", "保存", "腌制", "风干", "窖藏", "盐渍"],
+  "孔子饮食": ["confucius", "孔子", "割不正不食", "不得其酱不食", "礼仪"],
+  "周代配酱": ["zhou dynasty", "周代", "酱", "搭配", "礼制"],
+  "宴席规矩": ["banquet", "宴席", "座次", "敬酒", "分食"],
+  "合食制": ["communal eating", "合食", "分食", "会食", "坐具"],
+  "春节饮食": ["spring festival", "春节", "饺子", "椒柏酒", "过年", "正旦"],
+  "端午粽子": ["dragon boat", "端午", "粽子", "屈原", "雄黄酒"],
+  "中秋饮食": ["mid-autumn", "中秋", "月饼", "赏月", "瓜果"],
+  "冬至饮食": ["winter solstice", "冬至", "馄饨", "饺子", "进补"],
+  "腊八粥": ["laba", "腊八", "腊八粥", "佛教", "寺院"],
+  "古代穷人饮食": ["poor", "穷人", "平民", "粗粮", "野菜", "粥"],
+  "贵族饮食": ["nobles", "贵族", "钟鸣鼎食", "列鼎而食", "奢侈"],
+  "饮食外交": ["diplomacy", "外交", "和亲", "宴请", "赐食", "朝贡"],
+  "民以食为天": ["food is heaven", "民以食为天", "粮食", "治国", "仓储", "灾荒"],
+  "饮食等级": ["rank", "等级", "八珍", "天子", "诸侯", "饮食礼制"],
+  "寒食节": ["cold food", "寒食", "介子推", "禁火", "冷食", "鬼神"],
+  "赤豆粥": ["red bean", "赤豆粥", "驱疫鬼", "共工之子", "荆楚岁时记"],
+  "过桥米线": ["rice noodles", "过桥米线", "云南", "秀才", "鸡汤"],
+  "老婆饼": ["wife cake", "老婆饼", "潮州", "冬瓜肉", "点心"],
+  "忌食牛肉": ["beef", "牛肉", "禁忌", "报应", "农耕"]
+};
+const AI_DATABASE = {
+  // 一、食材传入史
+  "辣椒": {
+    id: 1,
+    category: "食材传入史",
+    question: { zh: "辣椒什么时候传入中国？", en: "When did chili peppers reach China?" },
+    keywords: {
+      zh: ["辣椒", "番椒", "辣子", "传入", "明朝", "美洲"],
+      en: ["chili", "cayenne", "hot pepper", "introduced", "Ming Dynasty", "Americas"]
+    },
+    answer: {
+      zh: "辣椒原产美洲，明末经海路传入中国东南沿海，最初作观赏，清中期才成为调味食材，并逐渐在四川、湖南普及。",
+      en: "Chilies, native to the Americas, reached China's southeast coast by sea in the late Ming. First grown as ornamentals, they became a seasoning only in the mid-Qing, then spread widely in Sichuan and Hunan."
+    }
+  },
+  "番茄": {
+    id: 2,
+    category: "食材传入史",
+    question: { zh: "番茄是哪个朝代来的？", en: "In which dynasty did tomatoes arrive?" },
+    keywords: {
+      zh: ["番茄", "西红柿", "传入", "晚清", "美洲"],
+      en: ["tomato", "introduced", "late Qing", "Americas"]
+    },
+    answer: {
+      zh: "番茄原产南美，晚清经海路传入中国，最初多作观赏植物，民国以后才逐渐成为常见蔬菜走上餐桌。",
+      en: "Tomatoes, native to South America, entered China by sea in the late Qing. Mostly ornamental at first, they became a common vegetable on Chinese tables only after the Republican era."
+    }
+  },
+  "玉米": {
+    id: 3,
+    category: "食材传入史",
+    question: { zh: "玉米什么时候到中国？", en: "When did corn reach China?" },
+    keywords: {
+      zh: ["玉米", "玉蜀黍", "番麦", "明朝", "传入"],
+      en: ["corn", "maize", "foreign wheat", "Ming Dynasty", "introduced"]
+    },
+    answer: {
+      zh: "玉米原产美洲，明朝中后期经海路传入中国，因耐旱高产，很快在山地推广，成为重要杂粮和救荒作物。",
+      en: "Corn, native to the Americas, arrived in China by sea in the mid-to-late Ming. Hardy and high-yielding, it spread quickly in mountainous areas and became an important coarse grain and famine-relief crop."
+    }
+  },
+  "番薯": {
+    id: 4,
+    category: "食材传入史",
+    question: { zh: "番薯是谁带回中国的？", en: "Who brought sweet potatoes to China?" },
+    keywords: {
+      zh: ["番薯", "红薯", "甘薯", "地瓜", "陈振龙", "万历"],
+      en: ["sweet potato", "Chen Zhenlong", "Wanli era"]
+    },
+    answer: {
+      zh: "番薯原产美洲，明万历年间福建商人陈振龙从吕宋带回藤苗，因耐瘠高产，迅速推广，成为重要救荒作物。",
+      en: "Sweet potatoes came from the Americas. In the Wanli era, Fujian merchant Chen Zhenlong brought vines back from Luzon. Hardy and productive, they spread quickly and became a key famine-relief crop."
+    }
+  },
+  "土豆": {
+    id: 5,
+    category: "食材传入史",
+    question: { zh: "土豆什么时候传入中国？", en: "When did potatoes reach China?" },
+    keywords: {
+      zh: ["土豆", "马铃薯", "洋芋", "明朝", "传入"],
+      en: ["potato", "Ming Dynasty", "introduced"]
+    },
+    answer: {
+      zh: "土豆原产南美，明朝末年传入中国，最初只在局部地区种植，清朝后期才逐渐推广到北方各地。",
+      en: "Potatoes, native to South America, reached China in the late Ming. Grown only locally at first, they gradually spread across northern China in the late Qing."
+    }
+  },
+
+  // 二、朝代饮食特征
+  "先秦饮食": {
+    id: 6,
+    category: "朝代饮食特征",
+    question: { zh: "先秦人主要吃什么？", en: "What did people mainly eat in the pre-Qin period?" },
+    keywords: {
+      zh: ["先秦", "主食", "小米", "蔬菜", "蒸煮"],
+      en: ["pre-Qin", "staple food", "millet", "vegetables", "steaming and boiling"]
+    },
+    answer: {
+      zh: "先秦人以小米、黍为主食，辅以豆类和野菜，烹饪以蒸煮为主，肉食稀少，多用于祭祀和贵族宴享。",
+      en: "Pre-Qin people mainly ate millet and broomcorn millet, with beans and wild vegetables. Cooking was mostly steaming and boiling; meat was scarce and largely reserved for rituals and noble banquets."
+    }
+  },
+  "唐代饮食": {
+    id: 7,
+    category: "朝代饮食特征",
+    question: { zh: "唐代饮食有什么特点？", en: "What were the features of Tang Dynasty cuisine?" },
+    keywords: {
+      zh: ["唐朝", "胡食", "西域", "合食", "烧尾宴"],
+      en: ["Tang Dynasty", "hu food", "foreign food", "Western Regions", "communal eating", "Shaowei banquet"]
+    },
+    answer: {
+      zh: "唐代胡食盛行，西域面食和葡萄酒传入，合食渐起，烧尾宴等宴席极尽丰盛，饮食气象开放豪迈。",
+      en: "Tang cuisine was marked by popular \"hu food\" from the Western Regions, including wheat dishes and grape wine. Communal eating emerged, and lavish banquets like the Shaowei Feast reflected an open, bold dining culture."
+    }
+  },
+  "宋代小吃": {
+    id: 8,
+    category: "朝代饮食特征",
+    question: { zh: "宋代市井有什么小吃？", en: "What snacks were sold in Song Dynasty markets?" },
+    keywords: {
+      zh: ["宋朝", "小吃", "汴京", "饮子", "汤饼"],
+      en: ["Song Dynasty", "snacks", "Bianjing", "drinks", "soup noodles"]
+    },
+    answer: {
+      zh: "宋代汴京夜市繁荣，小吃有汤饼、包子、饮子等，食肆通宵营业，市井饮食丰富，市民饮食文化兴盛。",
+      en: "Song Dynasty Bianjing had thriving night markets. Snacks included soup noodles, buns and sweet drinks. Eateries stayed open all night, and a rich urban food culture flourished among ordinary townspeople."
+    }
+  },
+  "明代饮食": {
+    id: 9,
+    category: "朝代饮食特征",
+    question: { zh: "明代饮食有什么变化？", en: "What changed in Ming Dynasty cuisine?" },
+    keywords: {
+      zh: ["明朝", "淮扬", "马铃薯", "甘薯", "节俭"],
+      en: ["Ming Dynasty", "Huaiyang cuisine", "potato", "sweet potato", "frugality"]
+    },
+    answer: {
+      zh: "明代淮扬菜兴起，番薯、玉米等新作物传入，饮食趋于精细，同时朝廷也提倡节俭，南北菜系渐成形。",
+      en: "In the Ming Dynasty, Huaiyang cuisine rose and new crops like sweet potatoes and corn arrived. Cooking grew more refined while frugality was also advocated, and regional cuisines gradually took shape."
+    }
+  },
+  "满汉全席": {
+    id: 10,
+    category: "朝代饮食特征",
+    question: { zh: "满汉全席是什么？", en: "What is the Manchu-Han Imperial Feast?" },
+    keywords: {
+      zh: ["清朝", "满汉全席", "国宴", "满菜", "汉菜"],
+      en: ["Qing Dynasty", "Manchu-Han Imperial Feast", "state banquet", "Manchu dishes", "Han dishes"]
+    },
+    answer: {
+      zh: "满汉全席是清代融合满汉菜式的盛大宴席，菜品多达上百道，分干果、凉菜、热菜、汤点等程序依次上桌。",
+      en: "The Manchu-Han Imperial Feast was a grand Qing banquet blending Manchu and Han dishes. It could include over a hundred courses, served in order from dried fruits and cold dishes to hot dishes, soups and pastries."
+    }
+  },
+
+  // 三、烹饪技法演变
+  "炒菜": {
+    id: 11,
+    category: "烹饪技法演变",
+    question: { zh: "炒菜是什么时候出现的？", en: "When did stir-frying appear?" },
+    keywords: {
+      zh: ["炒", "技法", "铁锅", "油", "唐宋"],
+      en: ["stir-fry", "technique", "iron wok", "oil", "Tang-Song"]
+    },
+    answer: {
+      zh: "炒菜需铁锅与油，唐宋时期铁锅普及后炒法渐兴，宋代文献已有明确记载，炒逐渐成为中式烹饪核心技法。",
+      en: "Stir-frying needs an iron wok and oil. It rose after iron woks spread in the Tang-Song period, and Song texts already record it clearly. Stir-frying gradually became a core Chinese cooking technique."
+    }
+  },
+  "蒸": {
+    id: 12,
+    category: "烹饪技法演变",
+    question: { zh: "蒸这种技法有多古老？", en: "How ancient is steaming?" },
+    keywords: {
+      zh: ["蒸", "甑", "殷墟", "蒸笼", "陶器"],
+      en: ["steaming", "zeng steamer", "Yin Ruins", "bamboo steamer", "pottery"]
+    },
+    answer: {
+      zh: "蒸法极古老，新石器时代已有陶甑，殷墟出土铜甑，蒸是中国最悠久的烹饪技法之一，至今仍广泛使用。",
+      en: "Steaming is very ancient. Pottery steamers existed in the Neolithic age, and bronze steamers were unearthed at Yin Ruins. It is one of China's oldest cooking techniques and is still widely used today."
+    }
+  },
+  "酱": {
+    id: 13,
+    category: "烹饪技法演变",
+    question: { zh: "古代人用什么做酱？", en: "What did ancient people use to make sauce?" },
+    keywords: {
+      zh: ["酱", "醢", "肉酱", "周朝", "发酵"],
+      en: ["sauce", "meat paste", "meat sauce", "Zhou Dynasty", "fermentation"]
+    },
+    answer: {
+      zh: "周代以肉做酱称\"醢\"，后改用豆麦发酵制酱，酱成为古代饮食重要调味品，并衍生出多种地方酱料。",
+      en: "In the Zhou Dynasty, meat paste called \"hai\" served as sauce. Later, fermented beans and wheat replaced meat. Sauce became a key seasoning in ancient Chinese food and gave rise to many regional varieties."
+    }
+  },
+  "腌菜": {
+    id: 14,
+    category: "烹饪技法演变",
+    question: { zh: "腌菜最早出现在什么时候？", en: "When did pickled vegetables first appear?" },
+    keywords: {
+      zh: ["腌菜", "菹", "周礼", "盐", "保存"],
+      en: ["pickled vegetables", "Rites of Zhou", "salt", "preservation"]
+    },
+    answer: {
+      zh: "腌菜古称\"菹\"，《周礼》已有记载，用盐腌制蔬菜以保存，是古老的储藏方法，也是冬季重要副食。",
+      en: "Pickled vegetables, called \"zu\" in ancient times, appear in the Rites of Zhou. Salt was used to preserve vegetables, making this an ancient storage method and an important winter side food."
+    }
+  },
+  "食物保存": {
+    id: 15,
+    category: "烹饪技法演变",
+    question: { zh: "古代人怎么保存食物？", en: "How did ancient people preserve food?" },
+    keywords: {
+      zh: ["保存", "腌制", "风干", "窖藏", "盐"],
+      en: ["preservation", "pickling", "air-drying", "cellar storage", "salt"]
+    },
+    answer: {
+      zh: "古人用腌制、风干、窖藏和盐渍等方法保存食物，这些方法延长了食用期限，也塑造了各地风味。",
+      en: "Ancient people preserved food by pickling, air-drying, cellar storage and salting. These methods extended how long food could be kept and also shaped regional flavors across China."
+    }
+  },
+
+  // 四、礼仪文化
+  "孔子饮食": {
+    id: 16,
+    category: "礼仪文化",
+    question: { zh: "孔子吃饭有什么讲究？", en: "What were Confucius's dining rules?" },
+    keywords: {
+      zh: ["孔子", "割不正不食", "不得其酱不食", "礼仪"],
+      en: ["Confucius", "no eating improperly cut meat", "no eating without proper sauce", "etiquette"]
+    },
+    answer: {
+      zh: "孔子讲究\"割不正不食\"\"不得其酱不食\"，强调饮食合礼，肉切不正、无酱搭配都不吃，饮食须合礼仪。",
+      en: "Confucius insisted on \"not eating improperly cut meat\" and \"not eating without proper sauce.\" He stressed that dining must follow ritual propriety, refusing meat cut wrongly or served without the right sauce."
+    }
+  },
+  "周代配酱": {
+    id: 17,
+    category: "礼仪文化",
+    question: { zh: "周代吃饭为什么要配酱？", en: "Why did Zhou Dynasty meals require sauce?" },
+    keywords: {
+      zh: ["周代", "酱", "醢", "搭配", "礼制"],
+      en: ["Zhou Dynasty", "sauce", "meat paste", "pairing", "ritual system"]
+    },
+    answer: {
+      zh: "周代饮食重礼制，不同肉食配不同酱，酱的搭配有严格规定，体现等级与礼仪，食酱成为身份象征。",
+      en: "Zhou Dynasty dining emphasized ritual. Different meats were paired with specific sauces, and these pairings were strictly regulated, reflecting rank and etiquette. Sauce thus became a symbol of status."
+    }
+  },
+  "宴席规矩": {
+    id: 18,
+    category: "礼仪文化",
+    question: { zh: "古代宴席有什么规矩？", en: "What rules governed ancient banquets?" },
+    keywords: {
+      zh: ["宴席", "座次", "礼仪", "敬酒", "分食"],
+      en: ["banquet", "seating order", "etiquette", "toasting", "separate eating"]
+    },
+    answer: {
+      zh: "古代宴席讲究座次、敬酒与分食之礼，长幼尊卑有序，席位和上菜顺序都有严格规定，失礼即为不敬。",
+      en: "Ancient banquets followed strict rules on seating, toasting and separate eating. Seniority and rank determined order, and both seating and serving sequence were regulated; breaking etiquette showed disrespect."
+    }
+  },
+  "合食制": {
+    id: 19,
+    category: "礼仪文化",
+    question: { zh: "合食制是什么时候开始的？", en: "When did communal eating begin?" },
+    keywords: {
+      zh: ["合食", "分食", "会食", "唐朝", "坐具"],
+      en: ["communal eating", "separate eating", "communal dining", "Tang Dynasty", "seating furniture"]
+    },
+    answer: {
+      zh: "合食制大约在唐代随高坐具普及而兴起，宋以后逐渐取代分食制，成为主流用餐方式，延续至今。",
+      en: "Communal eating arose around the Tang Dynasty as higher seating spread. After the Song, it gradually replaced separate eating and became the main dining style in China, continuing to this day."
+    }
+  },
+  "满汉全席程序": {
+    id: 20,
+    category: "礼仪文化",
+    question: { zh: "满汉全席有什么进餐程序？", en: "What was the serving order of the Manchu-Han Imperial Feast?" },
+    keywords: {
+      zh: ["满汉全席", "程序", "干果", "凉菜", "热菜"],
+      en: ["Manchu-Han Imperial Feast", "serving order", "dried fruits", "cold dishes", "hot dishes"]
+    },
+    answer: {
+      zh: "满汉全席按程序上菜，先干果、蜜饯，再凉菜、热菜，最后汤点，菜品顺序极为讲究，体现宴席礼制。",
+      en: "The Manchu-Han Imperial Feast served courses in strict order: dried fruits and preserves first, then cold dishes, hot dishes, and finally soups and pastries. The sequence reflected banquet ritual."
+    }
+  },
+
+  // 五、节令饮食
+  "春节饮食": {
+    id: 21,
+    category: "节令饮食",
+    question: { zh: "春节古人吃什么？", en: "What did ancients eat during Spring Festival?" },
+    keywords: {
+      zh: ["春节", "饺子", "椒柏酒", "过年", "正旦"],
+      en: ["Spring Festival", "dumplings", "pepper and cypress wine", "New Year", "Lunar New Year's Day"]
+    },
+    answer: {
+      zh: "古人春节吃饺子、饮椒柏酒，正旦之日全家团聚，饮食寓意辞旧迎新、祈福避邪，讲究吉利和团圆。",
+      en: "Ancients ate dumplings and drank pepper and cypress wine at Spring Festival. On Lunar New Year's Day families gathered, and the food symbolized renewal, blessing and reunion."
+    }
+  },
+  "端午粽子": {
+    id: 22,
+    category: "节令饮食",
+    question: { zh: "端午为什么要吃粽子？", en: "Why do people eat zongzi during Dragon Boat Festival?" },
+    keywords: {
+      zh: ["端午", "粽子", "屈原", "雄黄酒"],
+      en: ["Dragon Boat Festival", "zongzi", "Qu Yuan", "realgar wine"]
+    },
+    answer: {
+      zh: "端午吃粽相传为纪念屈原，古人投粽入江祭之，并饮雄黄酒以驱邪避疫，粽子成为端午标志食品。",
+      en: "Eating zongzi at Dragon Boat Festival is said to commemorate Qu Yuan. Ancients threw zongzi into the river as offerings and drank realgar wine to ward off evil and disease, making zongzi the festival's signature food."
+    }
+  },
+  "中秋饮食": {
+    id: 23,
+    category: "节令饮食",
+    question: { zh: "中秋除了月饼还吃什么？", en: "Besides mooncakes, what else was eaten at Mid-Autumn?" },
+    keywords: {
+      zh: ["中秋", "月饼", "赏月", "瓜果"],
+      en: ["Mid-Autumn", "mooncake", "moon viewing", "melons and fruits"]
+    },
+    answer: {
+      zh: "中秋除月饼外，古人还食瓜果、赏月饮酒，月饼象征团圆，瓜果寓意丰收，赏月与饮食相映成趣。",
+      en: "Besides mooncakes, ancients ate melons and fruits and drank wine while viewing the moon at Mid-Autumn. Mooncakes symbolize reunion, fruits signify harvest, and moon viewing pairs naturally with festive food."
+    }
+  },
+  "冬至饮食": {
+    id: 24,
+    category: "节令饮食",
+    question: { zh: "冬至古人吃什么？", en: "What did ancients eat at Winter Solstice?" },
+    keywords: {
+      zh: ["冬至", "馄饨", "饺子", "进补"],
+      en: ["Winter Solstice", "wonton", "dumplings", "tonifying"]
+    },
+    answer: {
+      zh: "冬至古人吃馄饨或饺子，认为冬至进补可御寒，民间有\"冬至大如年\"之说，南北食俗略有不同。",
+      en: "At Winter Solstice, ancients ate wontons or dumplings, believing tonifying food at this time wards off cold. Folk saying holds that Winter Solstice rivals the New Year, with slight regional differences."
+    }
+  },
+  "腊八粥": {
+    id: 25,
+    category: "节令饮食",
+    question: { zh: "腊八粥最早怎么来的？", en: "Where did Laba porridge originate?" },
+    keywords: {
+      zh: ["腊八", "腊八粥", "佛教", "寺院"],
+      en: ["Laba Festival", "Laba porridge", "Buddhism", "temples"]
+    },
+    answer: {
+      zh: "腊八粥源于佛教，传说释迦牟尼腊月初八得道，寺院熬粥供佛，后传入民间，成为腊八节标志饮食。",
+      en: "Laba porridge originated in Buddhism. Legend says Sakyamuni attained enlightenment on the eighth day of the twelfth month, so temples cooked porridge as offering; it later spread to common people and became the festival's signature food."
+    }
+  },
+
+  // 六、阶级与政治外交
+  "古代穷人饮食": {
+    id: 26,
+    category: "阶级与政治外交",
+    question: { zh: "古代穷人吃什么？", en: "What did the ancient poor eat?" },
+    keywords: {
+      zh: ["穷人", "平民", "粗粮", "野菜", "粥"],
+      en: ["the poor", "commoners", "coarse grains", "wild vegetables", "porridge"]
+    },
+    answer: {
+      zh: "古代穷人主食粗粮，辅以野菜、粥糜，肉食极少，灾年甚至以树皮草根充饥，饮食极为简朴。",
+      en: "The ancient poor mainly ate coarse grains with wild vegetables and thin porridge. Meat was rare, and in famine years they even relied on tree bark and grass roots, living on a very simple diet."
+    }
+  },
+  "贵族饮食": {
+    id: 27,
+    category: "阶级与政治外交",
+    question: { zh: "古代贵族吃饭有多奢侈？", en: "How luxurious were ancient nobles' meals?" },
+    keywords: {
+      zh: ["贵族", "钟鸣鼎食", "列鼎而食", "奢侈", "周礼"],
+      en: ["nobles", "bell-ringing and tripod-eating", "dining with arranged tripods", "luxury", "Rites of Zhou"]
+    },
+    answer: {
+      zh: "古代贵族\"钟鸣鼎食\"\"列鼎而食\"，鼎数按等级规定，宴席奢华，食材与器具极尽讲究，彰显身份。",
+      en: "Ancient nobles dined to bells and arranged tripods, with the number of tripods set by rank. Their banquets were lavish, with exquisite ingredients and vessels that displayed their status."
+    }
+  },
+  "饮食外交": {
+    id: 28,
+    category: "阶级与政治外交",
+    question: { zh: "饮食怎么被用作外交手段？", en: "How was food used as a diplomatic tool?" },
+    keywords: {
+      zh: ["外交", "和亲", "宴请", "赐食", "朝贡"],
+      en: ["diplomacy", "marriage alliance", "banqueting", "granting food", "tribute"]
+    },
+    answer: {
+      zh: "古代常以宴请、赐食、朝贡和和亲中的饮食往来作为外交手段，饮食成为政治关系与邦交亲疏的象征。",
+      en: "Ancients used banquets, granted food, tribute and marriage-alliance feasts as diplomatic tools. Food became a symbol of political relationships and the closeness of ties between states."
+    }
+  },
+  "民以食为天": {
+    id: 29,
+    category: "阶级与政治外交",
+    question: { zh: "为什么说\"民以食为天\"有政治含义？", en: "Why does \"food is heaven for the people\" carry political meaning?" },
+    keywords: {
+      zh: ["民以食为天", "粮食", "治国", "仓储", "灾荒"],
+      en: ["food is heaven for the people", "grain", "statecraft", "granaries", "famine"]
+    },
+    answer: {
+      zh: "\"民以食为天\"强调粮食关乎治国安邦，历代重视仓储与救灾，粮足则民安、国稳，粮食是政权根基。",
+      en: "\"Food is heaven for the people\" stresses that grain underpins governance. Dynasties valued granaries and famine relief, since sufficient food meant stable people and a stable state; grain was the foundation of power."
+    }
+  },
+  "饮食等级": {
+    id: 30,
+    category: "阶级与政治外交",
+    question: { zh: "古代用食物区分等级吗？", en: "Did ancient people use food to mark social rank?" },
+    keywords: {
+      zh: ["等级", "八珍", "天子", "诸侯", "饮食礼制"],
+      en: ["rank", "Eight Treasures", "Son of Heaven", "feudal lords", "dietary ritual system"]
+    },
+    answer: {
+      zh: "古代以\"八珍\"、鼎数、食器区分等级，天子、诸侯饮食各有规制，食物是身份与权力的象征。",
+      en: "Ancients used the Eight Treasures, numbers of tripods and food vessels to mark rank. The Son of Heaven and feudal lords each had dietary rules, so food symbolized status and power."
+    }
+  },
+
+  // 七、民间饮食传说
+  "寒食节": {
+    id: 31,
+    category: "民间饮食传说",
+    question: { zh: "寒食节禁火冷食，真的是为了纪念介子推吗？", en: "Was Cold Food Festival really held to commemorate Jie Zitui?" },
+    keywords: {
+      zh: ["寒食", "介子推", "禁火", "冷食", "鬼神", "传说"],
+      en: ["Cold Food Festival", "Jie Zitui", "fire ban", "cold food", "ghosts and spirits", "legend"]
+    },
+    answer: {
+      zh: "传说晋文公烧山逼介子推下山，介子推抱树而死，此后禁火冷食以示纪念。但禁火习俗可能早于介子推传说，是上古改火仪式与鬼神信仰的遗留。",
+      en: "Legend says Duke Wen of Jin burned a mountain to force Jie Zitui down; Jie held a tree and died, after which fire was banned and cold food eaten in his memory. But the fire-ban custom may predate the legend and stem from ancient fire-renewal rituals and spirit beliefs."
+    }
+  },
+  "赤豆粥": {
+    id: 32,
+    category: "民间饮食传说",
+    question: { zh: "冬至吃赤豆粥是为了驱鬼吗？", en: "Was red bean porridge at Winter Solstice meant to ward off ghosts?" },
+    keywords: {
+      zh: ["冬至", "赤豆粥", "驱疫鬼", "共工之子", "荆楚岁时记"],
+      en: ["Winter Solstice", "red bean porridge", "ward off plague ghosts", "son of Gonggong", "Jingchu Suishi Ji"]
+    },
+    answer: {
+      zh: "《荆楚岁时记》载，冬至食赤豆粥以驱疫鬼，传说疫鬼是共工之子死于冬至所化。红豆在古俗中被视为辟邪之物。",
+      en: "The Jingchu Suishi Ji records that red bean porridge was eaten at Winter Solstice to drive away plague ghosts, said to be the spirit of Gonggong's son who died that day. Red beans were regarded as evil-repelling in ancient custom."
+    }
+  },
+  "过桥米线": {
+    id: 33,
+    category: "民间饮食传说",
+    question: { zh: "过桥米线有什么传说？", en: "What is the legend behind Crossing-the-Bridge Rice Noodles?" },
+    keywords: {
+      zh: ["过桥米线", "云南", "传说", "秀才", "鸡汤"],
+      en: ["Crossing-the-Bridge Rice Noodles", "Yunnan", "legend", "scholar", "chicken broth"]
+    },
+    answer: {
+      zh: "传说云南一秀才在湖心亭读书，妻子送鸡汤米线过桥，汤面油层保温，米线到亭仍热，故名过桥米线。",
+      en: "Legend says a Yunnan scholar studied in a lake pavilion. His wife carried chicken-broth noodles across a bridge; the oil layer kept the broth hot, so the noodles stayed warm and the dish was named after the bridge."
+    }
+  },
+  "老婆饼": {
+    id: 34,
+    category: "民间饮食传说",
+    question: { zh: "老婆饼的名字有什么来历？", en: "Where does the name \"Wife Cake\" come from?" },
+    keywords: {
+      zh: ["老婆饼", "潮州", "传说", "冬瓜蓉", "点心"],
+      en: ["Wife Cake", "Chaozhou", "legend", "winter melon paste", "pastry"]
+    },
+    answer: {
+      zh: "传说潮州一糕点师为妻子制冬瓜蓉酥饼，香甜可口，人称\"老婆饼\"，名字由此流传，成为著名潮式点心。",
+      en: "Legend says a Chaozhou pastry chef made winter-melon paste cakes for his wife. Sweet and delicious, they were called \"wife cakes,\" and the name spread, making them a famous Chaozhou pastry."
+    }
+  },
+  "忌食牛肉": {
+    id: 35,
+    category: "民间饮食传说",
+    question: { zh: "为什么有些地方忌食牛肉，说会遭报应？", en: "Why do some places taboo eating beef, saying it brings retribution?" },
+    keywords: {
+      zh: ["牛肉", "禁忌", "报应", "农耕", "鬼神"],
+      en: ["beef", "taboo", "retribution", "farming", "ghosts and spirits"]
+    },
+    answer: {
+      zh: "牛为农耕之本，古人感念其劳苦，不忍杀食。民间相信食牛肉会遭鬼神报应，宋代《夷坚志》就记载有人因嗜食牛肉梦中被斥责而戒食。",
+      en: "Cattle were the foundation of farming, and ancients could not bear to slaughter them. Folk belief held that eating beef brought retribution; the Song Yijian Zhi records a man reprimanded in a dream for craving beef and giving it up."
+    }
+  }
+};
+function toggleLanguage() {
+  currentLang = currentLang === 'en' ? 'zh' : 'en';
+  document.body.className = 'lang-' + currentLang;
+  const t = UI_TEXT[currentLang];
+  document.getElementById('langBtn').textContent = t.langBtn;
+  document.getElementById('txt-title').textContent = t.title;
+  document.getElementById('txt-subtitle').textContent = t.subtitle;
+  document.getElementById('txt-searchBtn').textContent = t.searchBtn;
+  document.getElementById('txt-back1').textContent = t.back;
+  document.getElementById('txt-back2').textContent = t.back;
+  document.getElementById('txt-aiTitle').textContent = t.aiTitle;
+  document.getElementById('txt-histTitle').textContent = t.histTitle;
+  document.getElementById('txt-searchBtn2').textContent = t.searchBtn2;
+  document.getElementById('txt-aiPanel').textContent = t.aiPanel;
+  document.getElementById('txt-doubt').textContent = t.doubt;
+  document.getElementById('txt-geminiBtn').textContent = t.geminiBtn;
+  document.getElementById('txt-realSearch').textContent = t.realSearch;
+  document.getElementById('txt-status1').textContent = t.status1;
+  document.getElementById('txt-status2').textContent = t.status2;
+  document.getElementById('txt-suggest').textContent = t.suggest;
+  document.getElementById('searchInput').placeholder = t.placeholder;
+  renderCards();
+if (document.getElementById('page-detail').classList.contains('active')) {
+    const currentCoverClass = document.getElementById('miniCover').className.replace('mini-cover ', '');
+    const currentIndex = CARDS.findIndex(c => c.cls === currentCoverClass);
+    if (currentIndex !== -1) {
+      document.getElementById('miniQuestion').textContent = CARDS[currentIndex].label[currentLang];
+    }
+  }
+}
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const targetPage = document.getElementById(id);
+  targetPage.classList.add('active');
+  setTimeout(() => { targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 10);
+}
+
+function renderCards() {
+  const track = document.getElementById('carouselTrack');
+  const all = [...CARDS, ...CARDS];
+  track.innerHTML = all.map((c, i) => `
+    <div class="food-card ${c.cls}" data-index="${i % CARDS.length}">
+      <div class="placeholder"></div>
+      <div class="card-label">${c.label[currentLang]}</div>
+    </div>
+  `).join('');
+}
+
+function openDetail(index) {
+  const c = CARDS[index];
+  document.getElementById('aiDetailText').textContent = c.aiText[currentLang];
+  document.getElementById('historyDetailText').textContent = c.historyText[currentLang];
+  
+  const mini = document.getElementById('miniCover');
+  mini.className = 'mini-cover ' + c.cls;
+  mini.innerHTML = '<div class="placeholder"></div>';
+  
+  mini.querySelector('.placeholder').style.backgroundImage = `url('${index + 1}.jpg')`;
+  mini.querySelector('.placeholder').style.backgroundSize = 'cover';
+  mini.querySelector('.placeholder').style.backgroundPosition = 'center';
+  
+  document.getElementById('miniQuestion').textContent = c.label[currentLang];
+  
+  showPage('page-detail');
+}
+document.getElementById('carouselTrack').addEventListener('click', function(e) {
+  const card = e.target.closest('.food-card');
+  if (!card) return;
+  const idx = card.getAttribute('data-index');
+  if (idx !== null) openDetail(parseInt(idx, 10));
+});
+
+function goToSearchPage() {
+  showPage('page-search');
+  setTimeout(() => { document.getElementById('searchInput').focus(); }, 400);
+}
+
+function doSearch() {
+  const kw = document.getElementById('searchInput').value.trim();
+  if (!kw) return;
+  performSearch(kw);
+}
+
+let typeTimer = null;
+
+function performSearch(kw) {
+  const stopWords = /\b(the|a|an|is|are|was|were|what|how|why|of|in|on|to|for|with|about|do|does|did|can|could|and|or|not|this|that|these|those)\b/gi;
+  const stopWordsZh = /(的|了|是|我|想|找|了解|请问|关于|有哪些|什么|怎么|如何|介绍|一下)/g;
+
+  let cleanKw = kw.replace(/[.,!?;:'"()\[\]{}\+\-_\s，。！？、；：“”‘’（）《》【】]/g, ' ');
+  cleanKw = cleanKw.replace(stopWords, ' ');
+  cleanKw = cleanKw.replace(stopWordsZh, ' ');
+  cleanKw = cleanKw.replace(/\s+/g, ' ').trim().toLowerCase();
+
+  const googleUrl = 'https://www.google.com/search?q=' + encodeURIComponent(cleanKw);
+  const t = UI_TEXT[currentLang];
+
+  const status = document.getElementById('searchStatus');
+  status.innerHTML = `
+    <p>${t.resultKw}</p>
+    <div class="kw-highlight">${cleanKw}</div>
+    <p class="tip">${t.resultTip}</p>
+    <a href="${googleUrl}" target="_blank" class="btn-google" style="width:100%;">${t.googleBtn}</a>
+  `;
+
+  let aiAnswer = "";
+  let matched = false;
+
+  for (const key in AI_DATABASE) {
+    const item = AI_DATABASE[key];
+    
+    if (cleanKw.includes(key.toLowerCase())) {
+      aiAnswer = item.answer[currentLang];
+      matched = true;
+      break;
+    }
+
+    if (!matched && item.keywords) {
+      const allKeywords = [...(item.keywords.zh || []), ...(item.keywords.en || [])];
+      
+      for (let i = 0; i < allKeywords.length; i++) {
+        const word = allKeywords[i].toLowerCase();
+        if (cleanKw.includes(word) || word.includes(cleanKw)) {
+          aiAnswer = item.answer[currentLang];
+          matched = true;
+          break;
+        }
+      }
+      if (matched) break;
+    }
+  }
+
+  if (!matched) {
+    aiAnswer = currentLang === 'zh' 
+      ? "关于这个问题，我掌握的资料有限，请去 Google 搜索验证。" 
+      : "Regarding this, I have limited information. Please search Google.";
+  }
+
+  const aiOutputEl = document.getElementById('aiOutput');
+  typeText(aiOutputEl, aiAnswer);
+}
+
+function typeText(el, text) {
+  if (typeTimer) clearInterval(typeTimer);
+  el.innerHTML = '<span class="cursor"></span>';
+  let i = 0;
+  typeTimer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(typeTimer);
+      el.innerHTML = text.replace(/\n/g, '<br>');
+      return;
+    }
+    i++;
+    el.innerHTML = text.slice(0, i).replace(/\n/g, '<br>') + '<span class="cursor"></span>';
+  }, 18);
+}
+renderCards();
+</script>
+</body>
+</html>
